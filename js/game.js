@@ -393,7 +393,16 @@ class Game {
                     if (killed) {
                         this.leveling.addXp(snake.xpValue);
 
-                        // === NEW: Check for kill-based power pack milestones ===
+                        // === NEW: Health Regen every 5 kills ===
+                        if (this.leveling.totalKills > 0 && this.leveling.totalKills % 5 === 0) {
+                            const healAmount = 20; // Heal 20 HP
+                            if (this.player.health < this.player.maxHealth) {
+                                this.player.heal(healAmount);
+                                this.hud.showHealNotification(healAmount);
+                            }
+                        }
+
+                        // === Check for kill-based power pack milestones ===
                         const powerPacks = this.powerupManager.checkKillMilestones(this.leveling.totalKills);
                         powerPacks.forEach(powerPack => {
                             this.powerupManager.activate(powerPack, this.player, this.snakes);
@@ -410,8 +419,9 @@ class Game {
             const snakeBounds = snake.getCollisionBounds();
 
             if (circleCollision(playerBounds, snakeBounds)) {
-                // Snake deals damage based on size
-                const damage = 10 + Math.floor(snake.radius);
+                // === IMPROVED: Reduced snake damage ===
+                // Base damage 5 + size factor (was 10 + size)
+                const damage = 5 + Math.floor(snake.radius * 0.5);
                 this.player.takeDamage(damage);
 
                 // Snake disappears after hitting player

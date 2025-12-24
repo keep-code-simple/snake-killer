@@ -28,6 +28,10 @@ class HUD {
         this.levelUpNotification = document.getElementById('level-up-notification');
         this.powerupNotification = document.getElementById('powerup-notification');
         this.powerupName = document.getElementById('powerup-name');
+
+        // === NEW: Heal notification ===
+        this.healNotification = document.getElementById('heal-notification');
+        this.healText = this.healNotification.querySelector('.heal-text');
     }
 
     /**
@@ -136,6 +140,25 @@ class HUD {
         setTimeout(() => {
             this.powerupNotification.classList.add('hidden');
         }, 2000);
+    }
+
+    /**
+     * === NEW: Show heal notification ===
+     * @param {number} amount - Amount healed
+     */
+    showHealNotification(amount) {
+        this.healText.textContent = `+${amount} HP`;
+        this.healNotification.classList.remove('hidden');
+
+        // Restart animation
+        this.healNotification.style.animation = 'none';
+        this.healNotification.offsetHeight; /* trigger reflow */
+        this.healNotification.style.animation = 'healNotify 1.5s ease forwards';
+
+        // Hide after animation
+        setTimeout(() => {
+            this.healNotification.classList.add('hidden');
+        }, 1500);
     }
 
     /**

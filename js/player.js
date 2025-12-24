@@ -263,13 +263,19 @@ class Player {
      * @param {number} damage - Amount of damage
      * @returns {boolean} True if player died
      */
+    /**
+     * Take damage
+     * @param {number} damage - Amount of damage
+     * @returns {boolean} True if player died
+     */
     takeDamage(damage) {
         if (this.invulnerable || this.powerups.shield) {
             return false;
         }
 
         this.health -= damage;
-        this.setInvulnerable(0.5); // Brief invulnerability after hit
+        // === IMPROVED: Longer invulnerability window ===
+        this.setInvulnerable(1.0); // 1 second invulnerability
 
         if (this.health <= 0) {
             this.health = 0;
