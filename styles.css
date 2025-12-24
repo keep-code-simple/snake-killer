@@ -18,6 +18,11 @@
     --text-dim: #8892a0;
     --glass-bg: rgba(255, 255, 255, 0.05);
     --glass-border: rgba(255, 255, 255, 0.1);
+    /* iOS Safe Area Variables */
+    --safe-area-top: env(safe-area-inset-top, 0px);
+    --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-area-left: env(safe-area-inset-left, 0px);
+    --safe-area-right: env(safe-area-inset-right, 0px);
 }
 
 /* Reset and Base Styles */
@@ -27,36 +32,61 @@
     box-sizing: border-box;
 }
 
+/* === TOUCH SUPPORT: Prevent scrolling, zooming, and selection === */
+html,
+body {
+    touch-action: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    overscroll-behavior: none;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+}
+
 body {
     font-family: 'Rajdhani', sans-serif;
     background: var(--bg-darker);
     color: var(--text);
     overflow: hidden;
     min-height: 100vh;
+    min-height: -webkit-fill-available;
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
-/* Game Container */
+/* Game Container - with safe area padding */
 .game-container {
     position: relative;
     width: 100vw;
     height: 100vh;
+    height: -webkit-fill-available;
     display: flex;
     justify-content: center;
     align-items: center;
-    background: 
+    background:
         radial-gradient(ellipse at center, var(--bg-dark) 0%, var(--bg-darker) 100%);
+    /* Safe area padding for iOS notch/home indicator */
+    padding-top: var(--safe-area-top);
+    padding-bottom: var(--safe-area-bottom);
+    padding-left: var(--safe-area-left);
+    padding-right: var(--safe-area-right);
 }
 
 /* Canvas Styling */
 #game-canvas {
     border: 2px solid var(--glass-border);
     border-radius: 8px;
-    box-shadow: 
+    box-shadow:
         0 0 40px rgba(0, 255, 136, 0.1),
         inset 0 0 60px rgba(0, 0, 0, 0.5);
+    /* Prevent touch actions on canvas */
+    touch-action: none;
+    -webkit-tap-highlight-color: transparent;
 }
 
 /* ============================================
@@ -82,8 +112,13 @@ body {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 .menu-content {
@@ -93,7 +128,7 @@ body {
     border: 1px solid var(--glass-border);
     border-radius: 20px;
     backdrop-filter: blur(10px);
-    box-shadow: 
+    box-shadow:
         0 25px 50px rgba(0, 0, 0, 0.5),
         0 0 100px rgba(0, 255, 136, 0.1);
 }
@@ -113,8 +148,13 @@ body {
 }
 
 @keyframes glow {
-    from { filter: drop-shadow(0 0 20px var(--primary-glow)); }
-    to { filter: drop-shadow(0 0 40px var(--accent-glow)); }
+    from {
+        filter: drop-shadow(0 0 20px var(--primary-glow));
+    }
+
+    to {
+        filter: drop-shadow(0 0 40px var(--accent-glow));
+    }
 }
 
 .game-subtitle {
@@ -138,14 +178,14 @@ body {
     text-transform: uppercase;
     letter-spacing: 3px;
     transition: all 0.3s ease;
-    box-shadow: 
+    box-shadow:
         0 10px 30px rgba(0, 255, 136, 0.3),
         0 0 20px rgba(0, 255, 136, 0.2);
 }
 
 .menu-btn:hover {
     transform: translateY(-3px) scale(1.05);
-    box-shadow: 
+    box-shadow:
         0 15px 40px rgba(0, 255, 136, 0.4),
         0 0 40px rgba(0, 255, 136, 0.3);
 }
@@ -288,7 +328,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    box-shadow: 
+    box-shadow:
         0 5px 20px rgba(0, 255, 136, 0.3),
         0 0 15px rgba(0, 255, 136, 0.2);
 }
@@ -390,8 +430,15 @@ body {
 }
 
 @keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
 }
 
 .powerup-icon .icon {
@@ -418,10 +465,25 @@ body {
 }
 
 @keyframes levelUp {
-    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
-    20% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
-    80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-    100% { opacity: 0; transform: translate(-50%, -50%) scale(1.5); }
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.5);
+    }
+
+    20% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.2);
+    }
+
+    80% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(1.5);
+    }
 }
 
 .level-up-text {
@@ -429,7 +491,7 @@ body {
     font-size: 3rem;
     font-weight: 900;
     color: var(--primary);
-    text-shadow: 
+    text-shadow:
         0 0 20px var(--primary-glow),
         0 0 40px var(--primary-glow),
         0 0 60px var(--primary-glow);
@@ -450,10 +512,23 @@ body {
 }
 
 @keyframes powerupNotify {
-    0% { opacity: 0; transform: translate(-50%, -50%) translateY(20px); }
-    20% { opacity: 1; transform: translate(-50%, -50%) translateY(0); }
-    80% { opacity: 1; }
-    100% { opacity: 0; }
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) translateY(20px);
+    }
+
+    20% {
+        opacity: 1;
+        transform: translate(-50%, -50%) translateY(0);
+    }
+
+    80% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+    }
 }
 
 .powerup-notification span {
@@ -467,7 +542,7 @@ body {
 }
 
 /* ============================================
-   RESPONSIVE ADJUSTMENTS
+   RESPONSIVE ADJUSTMENTS & TOUCH SUPPORT
    ============================================ */
 
 @media (max-width: 768px) {
@@ -475,19 +550,133 @@ body {
         font-size: 2.5rem;
         letter-spacing: 4px;
     }
-    
+
     .menu-content {
-        padding: 40px;
+        padding: 30px 20px;
         margin: 20px;
+        max-width: 90vw;
     }
-    
+
+    /* Larger touch-friendly buttons */
+    .menu-btn {
+        padding: 20px 40px;
+        font-size: 1.1rem;
+        min-height: 56px;
+        /* Touch target minimum */
+    }
+
     .health-bar-container,
     .xp-bar-container {
-        width: 150px;
+        width: 120px;
+        height: 20px;
     }
-    
+
     .hud-stats {
         flex-direction: column;
-        gap: 10px;
+        gap: 8px;
+    }
+
+    .stat {
+        padding: 8px 12px;
+    }
+
+    /* HUD positioning for mobile - away from edges */
+    .hud-health {
+        top: calc(12px + var(--safe-area-top));
+        left: calc(12px + var(--safe-area-left));
+    }
+
+    .hud-stats {
+        top: calc(12px + var(--safe-area-top));
+        right: calc(12px + var(--safe-area-right));
+    }
+
+    .hud-xp {
+        top: calc(12px + var(--safe-area-top));
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .level-badge {
+        width: 70px;
+        height: 35px;
+    }
+
+    /* Power-ups - larger for touch, positioned safely */
+    .hud-powerups {
+        bottom: calc(20px + var(--safe-area-bottom));
+        left: calc(12px + var(--safe-area-left));
+    }
+
+    .powerup-icon {
+        width: 50px;
+        height: 50px;
+        min-width: 44px;
+        /* iOS touch target minimum */
+        min-height: 44px;
+    }
+
+    .powerup-icon .icon {
+        font-size: 1.3rem;
+    }
+
+    .powerup-icon .timer {
+        font-size: 0.6rem;
+    }
+
+    /* Controls info - show touch controls */
+    .controls-info {
+        margin-top: 25px;
+        padding-top: 20px;
+    }
+
+    .controls-info p {
+        font-size: 0.85rem;
+    }
+}
+
+/* Extra small screens (iPhone SE, etc) */
+@media (max-width: 375px) {
+    .game-title {
+        font-size: 2rem;
+        letter-spacing: 2px;
+    }
+
+    .menu-content {
+        padding: 25px 15px;
+    }
+
+    .health-bar-container,
+    .xp-bar-container {
+        width: 100px;
+    }
+
+    .level-badge {
+        width: 60px;
+        height: 30px;
+        font-size: 0.75rem;
+    }
+}
+
+/* Landscape phone */
+@media (max-height: 500px) {
+    .menu-content {
+        padding: 20px;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .game-title {
+        font-size: 2rem;
+        margin-bottom: 5px;
+    }
+
+    .game-subtitle {
+        margin-bottom: 15px;
+    }
+
+    .controls-info {
+        margin-top: 15px;
+        padding-top: 15px;
     }
 }

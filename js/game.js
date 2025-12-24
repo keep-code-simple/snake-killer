@@ -40,6 +40,10 @@ class Game {
         this.handleMouseMove = this.handleMouseMove.bind(this);
         this.handleMouseDown = this.handleMouseDown.bind(this);
         this.handleMouseUp = this.handleMouseUp.bind(this);
+        // === NEW: Touch handler bindings ===
+        this.handleTouchStart = this.handleTouchStart.bind(this);
+        this.handleTouchMove = this.handleTouchMove.bind(this);
+        this.handleTouchEnd = this.handleTouchEnd.bind(this);
 
         // Setup callbacks
         this.setupCallbacks();
@@ -88,6 +92,20 @@ class Game {
         this.canvas.addEventListener('mousedown', this.handleMouseDown);
         this.canvas.addEventListener('mouseup', this.handleMouseUp);
         this.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+
+        // === NEW: Touch events for mobile ===
+        // Use passive: false to allow preventDefault for scroll blocking
+        this.canvas.addEventListener('touchstart', this.handleTouchStart, { passive: false });
+        this.canvas.addEventListener('touchmove', this.handleTouchMove, { passive: false });
+        this.canvas.addEventListener('touchend', this.handleTouchEnd, { passive: false });
+        this.canvas.addEventListener('touchcancel', this.handleTouchEnd, { passive: false });
+
+        // Prevent default touch behaviors on the whole document during game
+        document.addEventListener('touchmove', (e) => {
+            if (this.running) {
+                e.preventDefault();
+            }
+        }, { passive: false });
 
         // Menu buttons
         document.getElementById('start-btn').addEventListener('click', () => this.start());
@@ -153,6 +171,77 @@ class Game {
         if (e.button === 0 && this.player) {
             this.player.handleMouseInput(this.player.mouseX, this.player.mouseY, false);
         }
+    }
+
+    // =====================================================
+    // === NEW: TOUCH INPUT HANDLERS FOR MOBILE ===
+    // =====================================================
+
+    /**
+     * Convert touch coordinates to canvas coordinates
+     * Accounts for canvas scaling and device pixel ratio
+     * @param {Touch} touch - Touch object
+     * @returns {{x: number, y: number}} Canvas coordinates
+     */
+    getTouchCanvasCoords(touch) {
+        const rect = this.canvas.getBoundingClientRect();
+
+        // Get the scale factor between canvas internal size and display size
+        const scaleX = this.canvas.width / rect.width;
+        const scaleY = this.canvas.height / rect.height;
+
+        // Convert touch coordinates to canvas coordinates
+        const x = (touch.clientX - rect.left) * scaleX;
+        const y = (touch.clientY - rect.top) * scaleY;
+
+        return { x, y };
+    }
+
+    /**
+     * Handle touch start event
+     * @param {TouchEvent} e - Touch event
+     */
+    handleTouchStart(e) {
+        e.preventDefault(); // Prevent scrolling and zooming
+
+        if (!this.player || !this.running) return;
+
+        // Use the first touch
+        const touch = e.touches[0];
+        if (!touch) return;
+
+        const coords = this.getTouchCanvasCoords(touch);
+        this.player.handleTouchInput(coords.x, coords.y, 'start');
+    }
+
+    /**
+     * Handle touch move event
+     * @param {TouchEvent} e - Touch event
+     */
+    handleTouchMove(e) {
+        e.preventDefault(); // Prevent scrolling
+
+        if (!this.player || !this.running) return;
+
+        // Use the first touch
+        const touch = e.touches[0];
+        if (!touch) return;
+
+        const coords = this.getTouchCanvasCoords(touch);
+        this.player.handleTouchInput(coords.x, coords.y, 'move');
+    }
+
+    /**
+     * Handle touch end event
+     * @param {TouchEvent} e - Touch event
+     */
+    handleTouchEnd(e) {
+        e.preventDefault();
+
+        if (!this.player) return;
+
+        // End touch input
+        this.player.handleTouchInput(0, 0, 'end');
     }
 
     /**

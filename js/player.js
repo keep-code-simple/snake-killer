@@ -1,6 +1,7 @@
 /**
  * SNAKE KILLER - Player Class
  * Cartoon human character with gun, shooting animations, and state management
+ * === ENHANCED: Touch input support for mobile devices ===
  */
 
 class Player {
@@ -29,16 +30,24 @@ class Player {
         this.gunLength = 28;            // Gun barrel length for bullet spawn
         this.gunOffsetY = -8;           // Gun position relative to body center
 
-        // Input state
+        // Input state - Keyboard
         this.keys = {
             up: false,
             down: false,
             left: false,
             right: false
         };
+
+        // Input state - Mouse/Pointer
         this.mouseX = x;
         this.mouseY = y;
         this.mouseDown = false;
+
+        // === NEW: Touch input state ===
+        this.touchActive = false;       // Is there an active touch?
+        this.touchX = x;                // Touch target X position
+        this.touchY = y;                // Touch target Y position
+        this.touchMoveThreshold = 30;   // Distance from touch before moving stops
 
         // Power-up state (extended for new power packs)
         this.powerups = {
@@ -108,6 +117,42 @@ class Player {
     }
 
     /**
+     * === NEW: Handle touch input ===
+     * Touch controls: Player moves toward touch, auto-fires while touching
+     * @param {number} x - Touch X position (already converted to canvas coords)
+     * @param {number} y - Touch Y position (already converted to canvas coords)
+     * @param {string} type - 'start', 'move', or 'end'
+     */
+    handleTouchInput(x, y, type) {
+        switch (type) {
+            case 'start':
+                this.touchActive = true;
+                this.touchX = x;
+                this.touchY = y;
+                // Also set mouse position for aiming and enable auto-fire
+                this.mouseX = x;
+                this.mouseY = y;
+                this.mouseDown = true;  // Auto-fire while touching
+                break;
+
+            case 'move':
+                if (this.touchActive) {
+                    this.touchX = x;
+                    this.touchY = y;
+                    // Update aim direction
+                    this.mouseX = x;
+                    this.mouseY = y;
+                }
+                break;
+
+            case 'end':
+                this.touchActive = false;
+                this.mouseDown = false;  // Stop auto-fire
+                break;
+        }
+    }
+
+    /**
      * Update player state
      * @param {number} deltaTime - Time since last frame
      * @param {number} canvasWidth - Canvas width for bounds
@@ -131,16 +176,42 @@ class Player {
         let vx = 0;
         let vy = 0;
 
-        if (this.keys.up) vy -= 1;
-        if (this.keys.down) vy += 1;
-        if (this.keys.left) vx -= 1;
-        if (this.keys.right) vx += 1;
+        // === NEW: Touch-based movement (takes priority over keyboard) ===
+        if (this.touchActive) {
+            // Calculate direction and distance to touch point
+            const dx = this.touchX - this.x;
+            const dy = this.touchY - this.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
 
-        // Normalize diagonal movement
-        if (vx !== 0 && vy !== 0) {
-            const factor = 1 / Math.sqrt(2);
-            vx *= factor;
-            vy *= factor;
+            // Only move if touch is beyond threshold distance
+            if (distance > this.touchMoveThreshold) {
+                // Normalize direction
+                vx = dx / distance;
+                vy = dy / distance;
+
+                // Clamp movement so player doesn't overshoot
+                const maxMove = this.speed * deltaTime;
+                if (distance < maxMove) {
+                    // Move exactly to touch point
+                    this.x = this.touchX;
+                    this.y = this.touchY;
+                    vx = 0;
+                    vy = 0;
+                }
+            }
+        } else {
+            // Keyboard movement (only when not touching)
+            if (this.keys.up) vy -= 1;
+            if (this.keys.down) vy += 1;
+            if (this.keys.left) vx -= 1;
+            if (this.keys.right) vx += 1;
+
+            // Normalize diagonal movement
+            if (vx !== 0 && vy !== 0) {
+                const factor = 1 / Math.sqrt(2);
+                vx *= factor;
+                vy *= factor;
+            }
         }
 
         // Apply movement
@@ -556,6 +627,9 @@ class Player {
         this.invulnerable = false;
         this.muzzleFlashTime = 0;
         this.recoilOffset = 0;
+        // Reset touch state
+        this.touchActive = false;
+        this.mouseDown = false;
         this.powerups = {
             rapidFire: false,
             wideShot: false,
