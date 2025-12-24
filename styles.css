@@ -629,6 +629,7 @@ body {
 }
 
 .powerup-btn {
+    pointer-events: auto;
     width: 70px;
     height: 70px;
     background: rgba(30, 30, 30, 0.8);
@@ -714,6 +715,7 @@ body {
 
 /* Sound Toggle */
 .sound-toggle {
+    pointer-events: auto;
     background: rgba(0, 0, 0, 0.5);
     border: 1px solid #444;
     color: #fff;
@@ -755,6 +757,7 @@ body {
 }
 
 .weapon-btn {
+    pointer-events: auto;
     background: rgba(0, 0, 0, 0.6);
     border: 2px solid #444;
     border-radius: 12px;
