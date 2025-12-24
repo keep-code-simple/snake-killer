@@ -745,58 +745,180 @@ body {
     text-decoration: line-through;
 }
 
-/* Weapon Toolbar */
+/* Weapon Toolbar - Enhanced with visual boundaries and touch optimization */
 .weapon-toolbar {
     position: absolute;
-    right: 20px;
-    bottom: 120px;
+    right: calc(20px + var(--safe-area-right));
+    top: 50%;
+    transform: translateY(-50%);
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
     z-index: 100;
+    /* Container styling - visual boundary */
+    background: rgba(0, 0, 0, 0.7);
+    padding: 12px 10px;
+    border-radius: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
 .weapon-btn {
     pointer-events: auto;
-    background: rgba(0, 0, 0, 0.6);
-    border: 2px solid #444;
-    border-radius: 12px;
-    width: 50px;
-    height: 50px;
+    background: rgba(30, 30, 40, 0.8);
+    border: 3px solid #555;
+    border-radius: 14px;
+    width: 60px;
+    height: 70px;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    font-size: 1.5rem;
+    gap: 4px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.15s ease;
     backdrop-filter: blur(5px);
     position: relative;
+    /* Prevent text selection and improve touch */
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
 }
 
+/* Weapon icon */
+.weapon-btn .weapon-icon {
+    font-size: 1.6rem;
+    line-height: 1;
+    filter: grayscale(30%);
+    transition: filter 0.15s ease;
+}
+
+/* Weapon name label */
+.weapon-btn .weapon-name {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.55rem;
+    font-weight: 600;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: color 0.15s ease;
+}
+
+/* Active weapon - highlighted with glow and thicker border */
 .weapon-btn.active {
     border-color: var(--accent);
-    background: rgba(0, 212, 255, 0.2);
-    box-shadow: 0 0 15px var(--accent-glow);
-    transform: scale(1.1);
+    border-width: 3px;
+    background: rgba(0, 212, 255, 0.25);
+    box-shadow:
+        0 0 20px var(--accent-glow),
+        0 0 40px rgba(0, 212, 255, 0.2),
+        inset 0 0 15px rgba(0, 212, 255, 0.1);
+    transform: scale(1.08);
 }
 
-.weapon-btn:hover {
+.weapon-btn.active .weapon-icon {
+    filter: none;
+}
+
+.weapon-btn.active .weapon-name {
+    color: var(--accent);
+}
+
+/* Locked/unavailable weapons - dimmed appearance */
+.weapon-btn.locked {
+    opacity: 0.35;
+    pointer-events: none;
+    filter: grayscale(100%);
+}
+
+.weapon-btn.locked::after {
+    content: '🔒';
+    position: absolute;
+    font-size: 0.8rem;
+    top: 4px;
+    right: 4px;
+}
+
+/* Hover state (desktop) */
+.weapon-btn:not(.active):not(.locked):hover {
     transform: scale(1.05);
-    border-color: #888;
+    border-color: #999;
+    background: rgba(50, 50, 60, 0.9);
 }
 
-/* Mobile adjustments */
+/* Switch animation - triggered on weapon change */
+@keyframes weaponSwitch {
+    0% {
+        transform: scale(1.08);
+    }
+
+    50% {
+        transform: scale(1.2);
+        box-shadow:
+            0 0 30px var(--accent-glow),
+            0 0 60px rgba(0, 212, 255, 0.4);
+    }
+
+    100% {
+        transform: scale(1.08);
+    }
+}
+
+.weapon-btn.switching {
+    animation: weaponSwitch 0.25s ease-out;
+}
+
+/* Flash effect on switch */
+@keyframes weaponFlash {
+
+    0%,
+    100% {
+        background: rgba(0, 212, 255, 0.25);
+    }
+
+    50% {
+        background: rgba(0, 212, 255, 0.5);
+    }
+}
+
+.weapon-btn.active.switching {
+    animation: weaponSwitch 0.25s ease-out, weaponFlash 0.25s ease-out;
+}
+
+/* Mobile adjustments - larger touch targets */
 @media (max-width: 768px) {
     .weapon-toolbar {
-        bottom: 100px;
-        right: 15px;
+        right: calc(12px + var(--safe-area-right));
+        padding: 10px 8px;
         gap: 8px;
     }
 
     .weapon-btn {
-        width: 45px;
-        height: 45px;
-        font-size: 1.2rem;
+        /* Minimum 56px for reliable touch targets */
+        width: 56px;
+        height: 66px;
+        border-radius: 12px;
+    }
+
+    .weapon-btn .weapon-icon {
+        font-size: 1.4rem;
+    }
+
+    .weapon-btn .weapon-name {
+        font-size: 0.5rem;
+    }
+}
+
+/* Extra small screens */
+@media (max-width: 375px) {
+    .weapon-toolbar {
+        right: calc(8px + var(--safe-area-right));
+        padding: 8px 6px;
+    }
+
+    .weapon-btn {
+        width: 50px;
+        height: 60px;
     }
 }
 

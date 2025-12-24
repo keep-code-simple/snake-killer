@@ -170,12 +170,28 @@ class Game {
 
     /**
      * Switch weapon by ID
-     * @param {string} id 
+     * Triggers visual feedback and optional sound effect
+     * @param {string} id - Weapon ID to switch to
      */
     switchWeapon(id) {
         if (!this.player) return;
+
+        // Check if already using this weapon
+        if (this.player.currentWeapon && this.player.currentWeapon.id === id) {
+            return; // No switch needed
+        }
+
+        // Switch weapon in player
         this.player.setWeapon(id);
+
+        // Update toolbar highlighting
         this.hud.updateWeaponToolbar(id);
+
+        // Trigger switch animation feedback
+        this.hud.showWeaponSwitchFeedback(id);
+
+        // Play switch sound (respects sound toggle)
+        this.audio.play('switch');
     }
 
     /**

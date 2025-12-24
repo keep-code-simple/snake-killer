@@ -255,32 +255,87 @@ class HUD {
     }
 
     /**
-     * Initialize weapon toolbar
-     * @param {Object} weapons 
-     * @param {Function} callback 
+     * Initialize weapon toolbar with visual tiles and touch support
+     * @param {Object} weapons - WEAPONS configuration object
+     * @param {Function} callback - Weapon switch callback
      */
     initializeWeaponToolbar(weapons, callback) {
         const container = document.getElementById('weapon-toolbar');
         if (!container) return;
         container.innerHTML = '';
 
+        // Store callback for later use
+        this.weaponSwitchCallback = callback;
+
+        // Track last switch time to prevent rapid switches
+        this.lastWeaponSwitchTime = 0;
+        const SWITCH_COOLDOWN = 150; // ms between switches
+
         Object.values(weapons).forEach(w => {
             const btn = document.createElement('div');
             btn.className = 'weapon-btn';
             btn.id = `weapon-${w.id}`;
-            btn.title = w.name;
-            btn.innerHTML = w.icon;
+            btn.dataset.weaponId = w.id;
+            btn.title = `${w.name} - ${w.description}`;
 
+            // Create icon and name elements for visual tile
+            btn.innerHTML = `
+                <span class="weapon-icon">${w.icon}</span>
+                <span class="weapon-name">${w.name}</span>
+            `;
+
+            /**
+             * Handle weapon selection via tap or click
+             * Includes cooldown to prevent accidental double-switches
+             */
             const select = (e) => {
                 e.preventDefault();
                 e.stopPropagation();
+
+                // Cooldown check to prevent rapid switching
+                const now = Date.now();
+                if (now - this.lastWeaponSwitchTime < SWITCH_COOLDOWN) {
+                    return;
+                }
+                this.lastWeaponSwitchTime = now;
+
+                // Trigger callback to switch weapon
                 callback(w.id);
             };
+
+            // Touch event - use touchend to prevent conflict with movement
+            btn.addEventListener('touchend', select, { passive: false });
+            // Mouse click for desktop
             btn.addEventListener('click', select);
-            btn.addEventListener('touchstart', select, { passive: false });
+
+            // Prevent touchstart from bubbling to canvas (no shooting on weapon tap)
+            btn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            }, { passive: false });
 
             container.appendChild(btn);
         });
+    }
+
+    /**
+     * Trigger visual feedback animation on weapon switch
+     * @param {string} weaponId - ID of the newly active weapon
+     */
+    showWeaponSwitchFeedback(weaponId) {
+        const container = document.getElementById('weapon-toolbar');
+        if (!container) return;
+
+        const btn = container.querySelector(`#weapon-${weaponId}`);
+        if (!btn) return;
+
+        // Add switching class for animation
+        btn.classList.add('switching');
+
+        // Remove class after animation completes
+        setTimeout(() => {
+            btn.classList.remove('switching');
+        }, 250);
     }
 
     /**

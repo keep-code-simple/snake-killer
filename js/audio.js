@@ -68,6 +68,9 @@ class AudioManager {
             case 'levelup':
                 this.levelUpSound();
                 break;
+            case 'switch':
+                this.switchSound();
+                break;
         }
     }
 
@@ -156,5 +159,28 @@ class AudioManager {
 
         osc.start(now);
         osc.stop(now + duration);
+    }
+
+    /**
+     * Weapon switch sound - quick rising click
+     */
+    switchSound() {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.type = 'sine';
+        // Quick rising tone
+        osc.frequency.setValueAtTime(300, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(800, this.ctx.currentTime + 0.06);
+
+        // Short, snappy envelope
+        gain.gain.setValueAtTime(this.masterVolume * 0.4, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
+
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.08);
     }
 }
