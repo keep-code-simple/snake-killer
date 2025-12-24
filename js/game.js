@@ -134,11 +134,33 @@ class Game {
             }
         }, { passive: false });
 
-        // Menu buttons
-        document.getElementById('start-btn').addEventListener('click', () => this.start());
-        document.getElementById('restart-btn').addEventListener('click', () => this.restart());
+        // Menu buttons - add touch support for iOS
+        const startBtn = document.getElementById('start-btn');
+        const restartBtn = document.getElementById('restart-btn');
 
-        // === NEW: Sound Toggle ===
+        // Start button - ensure audio is initialized on touch/click
+        startBtn.addEventListener('click', () => {
+            if (this.audio) this.audio.init();
+            this.start();
+        });
+        startBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            if (this.audio) this.audio.init();
+            this.start();
+        }, { passive: false });
+
+        // Restart button
+        restartBtn.addEventListener('click', () => {
+            if (this.audio) this.audio.init();
+            this.restart();
+        });
+        restartBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            if (this.audio) this.audio.init();
+            this.restart();
+        }, { passive: false });
+
+        // === Sound Toggle ===
         const soundBtn = document.getElementById('sound-toggle');
         if (soundBtn) {
             // Init state visual
@@ -153,7 +175,7 @@ class Game {
                 this.toggleSound();
             });
             // Also enable touch
-            soundBtn.addEventListener('touchstart', (e) => {
+            soundBtn.addEventListener('touchend', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 if (this.audio) this.audio.init();
@@ -161,11 +183,15 @@ class Game {
             }, { passive: false });
         }
 
-        // Audio Init on Interaction
-        const initAudio = () => { if (this.audio) this.audio.init(); };
+        // Audio Init on any early interaction (iOS Safari fix)
+        // These ensure audio context is created before gameplay starts
+        const initAudio = () => {
+            if (this.audio) this.audio.init();
+        };
         window.addEventListener('click', initAudio, { once: true });
         window.addEventListener('keydown', initAudio, { once: true });
         window.addEventListener('touchstart', initAudio, { once: true });
+        window.addEventListener('touchend', initAudio, { once: true });
     }
 
     /**
@@ -291,6 +317,9 @@ class Game {
      */
     handleTouchStart(e) {
         e.preventDefault(); // Prevent scrolling and zooming
+
+        // Ensure audio is unlocked on touch (iOS Safari requirement)
+        if (this.audio) this.audio.init();
 
         if (!this.player || !this.running) return;
 

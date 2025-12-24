@@ -1,6 +1,11 @@
 /**
  * SNAKE KILLER - Audio System
  * Synthesized sound effects using Web Audio API
+ * 
+ * iOS Safari Compatibility:
+ * - Audio context starts suspended and must be resumed on user gesture
+ * - Context resume is asynchronous and must complete before playing sounds
+ * - A silent buffer must be played to fully unlock audio on some iOS versions
  */
 
 class AudioManager {
@@ -8,6 +13,7 @@ class AudioManager {
         this.ctx = null;
         this.enabled = localStorage.getItem('snakeKiller_sound') !== 'false';
         this.initialized = false;
+        this.unlocked = false; // iOS unlock state
 
         // Volume master
         this.masterVolume = 0.3;
@@ -15,27 +21,84 @@ class AudioManager {
 
     /**
      * Initialize Audio Context on user gesture
+     * Must be called from a touch/click event handler
      */
     init() {
         if (this.initialized) return;
 
         try {
+            // Use webkit prefix for older iOS Safari
             const AudioContext = window.AudioContext || window.webkitAudioContext;
             this.ctx = new AudioContext();
             this.initialized = true;
-            console.log("Audio Initialized");
+            console.log("Audio Context Created, state:", this.ctx.state);
+
+            // Immediately try to unlock for iOS
+            this.unlock();
         } catch (e) {
             console.error("Web Audio API not supported", e);
         }
     }
 
     /**
+     * Unlock audio context for iOS Safari
+     * iOS requires a user gesture to start audio, and some versions
+     * require playing a silent buffer to fully unlock
+     */
+    unlock() {
+        if (!this.ctx || this.unlocked) return;
+
+        // Resume context if suspended
+        if (this.ctx.state === 'suspended') {
+            this.ctx.resume().then(() => {
+                console.log("Audio Context Resumed");
+                this.playUnlockSound();
+            }).catch(e => {
+                console.warn("Audio resume failed:", e);
+            });
+        } else {
+            this.playUnlockSound();
+        }
+    }
+
+    /**
+     * Play a silent/minimal sound to fully unlock iOS audio
+     * This ensures the audio context is truly active
+     */
+    playUnlockSound() {
+        if (!this.ctx || this.unlocked) return;
+
+        try {
+            // Create a very short, silent oscillator
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+
+            // Set gain to near-zero (silent)
+            gain.gain.setValueAtTime(0.001, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 0.01);
+
+            osc.start(this.ctx.currentTime);
+            osc.stop(this.ctx.currentTime + 0.01);
+
+            this.unlocked = true;
+            console.log("Audio Unlocked for iOS");
+        } catch (e) {
+            console.warn("Unlock sound failed:", e);
+        }
+    }
+
+    /**
      * Resume context if suspended (browser auto-lock)
+     * Returns a promise for async handling
      */
     resume() {
         if (this.ctx && this.ctx.state === 'suspended') {
-            this.ctx.resume();
+            return this.ctx.resume();
         }
+        return Promise.resolve();
     }
 
     /**
@@ -49,12 +112,30 @@ class AudioManager {
 
     /**
      * Play a sound effect
-     * @param {string} type - 'shoot', 'hit', 'powerup', 'levelup' 
+     * Ensures context is active before playing (iOS fix)
+     * @param {string} type - 'shoot', 'hit', 'powerup', 'levelup', 'switch'
      */
     play(type) {
         if (!this.enabled || !this.ctx) return;
-        this.resume();
 
+        // Check if context is suspended (can happen on iOS after tab switch)
+        if (this.ctx.state === 'suspended') {
+            // Try to resume and play - async but best effort
+            this.ctx.resume().then(() => {
+                this._playSound(type);
+            }).catch(() => {
+                // Silently fail - will work on next user gesture
+            });
+        } else {
+            this._playSound(type);
+        }
+    }
+
+    /**
+     * Internal method to play the actual sound
+     * @param {string} type - Sound type
+     */
+    _playSound(type) {
         switch (type) {
             case 'shoot':
                 this.shootSound();
