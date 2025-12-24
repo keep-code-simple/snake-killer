@@ -577,6 +577,7 @@ body {
     }
 }
 
+/* Heal Notification Text */
 .heal-text {
     font-family: 'Orbitron', sans-serif;
     font-size: 1.8rem;
@@ -585,6 +586,107 @@ body {
     /* Green */
     text-shadow: 0 0 20px var(--primary-glow);
     letter-spacing: 2px;
+}
+
+/* Power Up Toolbar */
+.powerup-toolbar {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 15px;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 12px;
+    backdrop-filter: blur(4px);
+    z-index: 100;
+    /* Safe area for iPhone X+ */
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
+}
+
+.powerup-btn {
+    width: 70px;
+    height: 70px;
+    background: rgba(30, 30, 30, 0.8);
+    border: 2px solid #555;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.powerup-btn .icon {
+    font-size: 1.8rem;
+    margin-bottom: 4px;
+    filter: grayscale(100%);
+    opacity: 0.5;
+}
+
+.powerup-btn .cost {
+    font-size: 0.7rem;
+    color: #888;
+    font-family: 'Orbitron', sans-serif;
+}
+
+/* Available State */
+.powerup-btn.available {
+    border-color: var(--secondary);
+    background: rgba(0, 212, 255, 0.1);
+    box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
+}
+
+.powerup-btn.available .icon {
+    filter: none;
+    opacity: 1;
+}
+
+.powerup-btn.available .cost {
+    color: var(--secondary);
+}
+
+.powerup-btn.available:active {
+    transform: scale(0.95);
+}
+
+/* Active State */
+.powerup-btn.active {
+    border-color: var(--warning);
+    background: rgba(255, 170, 0, 0.2);
+    box-shadow: 0 0 15px rgba(255, 170, 0, 0.4);
+    pointer-events: none;
+    /* Can't click while active */
+}
+
+.powerup-btn.active .icon {
+    filter: none;
+    opacity: 1;
+    animation: pulse 1s infinite;
+}
+
+.powerup-btn.active .cost {
+    color: var(--warning);
+    content: "ACTIVE";
+    /* Check active logic in JS */
+}
+
+/* Progress overlay for active duration */
+.powerup-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.1);
+    transform-origin: bottom;
+    transform: scaleY(0);
+    pointer-events: none;
 }
 
 /* ============================================

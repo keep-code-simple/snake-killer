@@ -73,8 +73,14 @@
                 </div>
             </div>
 
-            <!-- Score and Kills -->
+            <!-- Active Power-ups ( Status Only ) -->
+            <div id="active-effects-container" class="hud-powerups"></div>
+
             <div class="hud-stats">
+                <div class="stat">
+                    <span class="stat-label">POINTS</span>
+                    <span id="points-text" class="stat-value highlight">0</span>
+                </div>
                 <div class="stat">
                     <span class="stat-label">SCORE</span>
                     <span id="score-text" class="stat-value">0</span>
@@ -85,24 +91,29 @@
                 </div>
             </div>
 
-            <!-- Active Power-ups -->
-            <div id="powerups-container" class="hud-powerups"></div>
-
-            <!-- Heal Notification -->
-            <div id="heal-notification" class="heal-notification hidden">
-                <span class="heal-text">+20 HP</span>
-            </div>
-
-            <!-- Level Up Notification -->
-            <div id="level-up-notification" class="level-up-notification hidden">
-                <span class="level-up-text">LEVEL UP!</span>
-            </div>
-
-            <!-- Power-up Notification -->
-            <div id="powerup-notification" class="powerup-notification hidden">
-                <span id="powerup-name"></span>
-            </div>
+            <!-- ... existing code ... -->
         </div>
+
+        <!-- Power Up Toolbar (Bottom Center) -->
+        <div id="powerup-toolbar" class="powerup-toolbar">
+            <!-- Buttons injected by JS -->
+        </div>
+
+        <!-- Heal Notification -->
+        <div id="heal-notification" class="heal-notification hidden">
+            <span class="heal-text">+20 HP</span>
+        </div>
+
+        <!-- Level Up Notification -->
+        <div id="level-up-notification" class="level-up-notification hidden">
+            <span class="level-up-text">LEVEL UP!</span>
+        </div>
+
+        <!-- Power-up Notification -->
+        <div id="powerup-notification" class="powerup-notification hidden">
+            <span id="powerup-name"></span>
+        </div>
+    </div>
     </div>
 
     <!-- Game Scripts -->

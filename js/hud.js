@@ -20,9 +20,12 @@ class HUD {
         // Stats
         this.scoreText = document.getElementById('score-text');
         this.killsText = document.getElementById('kills-text');
+        this.pointsText = document.getElementById('points-text');
 
         // Power-ups
-        this.powerupsContainer = document.getElementById('powerups-container');
+        // Mapped to 'active-effects-container' now
+        this.powerupsContainer = document.getElementById('active-effects-container');
+        this.powerupToolbar = document.getElementById('powerup-toolbar');
 
         // Notifications
         this.levelUpNotification = document.getElementById('level-up-notification');
@@ -46,6 +49,84 @@ class HUD {
      */
     hide() {
         this.container.classList.add('hidden');
+    }
+
+    /**
+     * Update points display
+     * @param {number} points 
+     */
+    updatePoints(points) {
+        if (this.pointsText) this.pointsText.textContent = points;
+    }
+
+    /**
+     * Initialize power-up toolbar buttons
+     * @param {Object} packs - POWER_PACKS object
+     * @param {Function} callback - Activation callback
+     */
+    initializePowerupToolbar(packs, callback) {
+        if (!this.powerupToolbar) return;
+        this.powerupToolbar.innerHTML = '';
+
+        Object.values(packs).forEach(pack => {
+            const btn = document.createElement('div');
+            btn.className = 'powerup-btn';
+            btn.id = `btn-${pack.id}`;
+            btn.dataset.cost = pack.cost;
+
+            const activate = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                callback(pack.id);
+            };
+            btn.addEventListener('touchstart', activate, { passive: false });
+            btn.addEventListener('click', activate);
+
+            btn.innerHTML = `
+                <span class="icon">${pack.icon}</span>
+                <span class="cost">${pack.cost} PTS</span>
+                <div class="powerup-progress"></div>
+            `;
+            this.powerupToolbar.appendChild(btn);
+        });
+    }
+
+    /**
+     * Update toolbar visual state
+     * @param {number} points 
+     * @param {Map} activePowerups 
+     */
+    updatePowerupToolbar(points, activePowerups) {
+        if (!this.powerupToolbar) return;
+        const buttons = this.powerupToolbar.querySelectorAll('.powerup-btn');
+        const anyActive = activePowerups.size > 0;
+
+        buttons.forEach(btn => {
+            const packId = btn.id.replace('btn-', '');
+            const cost = parseInt(btn.dataset.cost);
+            const isActive = activePowerups.has(packId);
+
+            // Available if: enough points AND not active AND no other active
+            const isAvailable = points >= cost && !isActive && !anyActive;
+
+            btn.classList.toggle('active', isActive);
+            btn.classList.toggle('available', isAvailable);
+
+            // Update status text
+            const costText = btn.querySelector('.cost');
+            if (isActive) {
+                costText.textContent = 'ACTIVE';
+            } else {
+                costText.textContent = `${cost} PTS`;
+            }
+
+            // Visual dimming
+            if (!isActive && !isAvailable) {
+                btn.style.opacity = '0.4';
+            } else {
+                btn.style.opacity = '1';
+            }
+        });
     }
 
     /**

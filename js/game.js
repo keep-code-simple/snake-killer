@@ -44,6 +44,7 @@ class Game {
         this.handleTouchStart = this.handleTouchStart.bind(this);
         this.handleTouchMove = this.handleTouchMove.bind(this);
         this.handleTouchEnd = this.handleTouchEnd.bind(this);
+        this.handlePowerupActivation = this.handlePowerupActivation.bind(this);
 
         // Setup callbacks
         this.setupCallbacks();
@@ -59,13 +60,6 @@ class Game {
         // Level up callback
         this.leveling.onLevelUp = (level) => {
             this.hud.showLevelUp();
-
-            // Check for power-up milestone
-            const powerup = this.powerupManager.getPowerupForLevel(level);
-            if (powerup) {
-                this.powerupManager.activate(powerup, this.player, this.snakes);
-                this.hud.showPowerupNotification(powerup.name);
-            }
         };
 
         // XP change callback
@@ -75,7 +69,10 @@ class Game {
 
         // Power-up HUD callback
         this.powerupManager.setHudCallback((powerups) => {
+            // Update active list (top right)
             this.hud.updatePowerups(powerups);
+            // Update toolbar state (bottom center)
+            this.hud.updatePowerupToolbar(this.points, this.powerupManager.activePowerups);
         });
     }
 
@@ -258,8 +255,13 @@ class Game {
         this.bullets = [];
         this.snakes = [];
         this.leveling.reset();
-        this.powerupManager.reset(this.player, this.snakes);  // Pass snakes for freeze cleanup
+        this.powerupManager.reset(this.player, this.snakes);
         this.hud.reset();
+
+        // === NEW: Initialize points ===
+        this.points = 0;
+        this.hud.updatePoints(this.points);
+        this.hud.initializePowerupToolbar(POWER_PACKS, this.handlePowerupActivation);
 
         // Show HUD
         this.hud.show();
@@ -279,6 +281,31 @@ class Game {
     restart() {
         this.gameOverScreen.classList.add('hidden');
         this.start();
+    }
+
+    /**
+     * Handle power-up activation attempt
+     * @param {string} packId - ID of the power pack
+     */
+    handlePowerupActivation(packId) {
+        if (!this.running || this.gameOver) return;
+
+        // Find pack by ID
+        const pack = Object.values(POWER_PACKS).find(p => p.id === packId);
+        if (!pack) return;
+
+        // Check conditions
+        if (this.points < pack.cost) return;
+        if (this.powerupManager.hasActivePowerup()) return;
+
+        // Activate
+        this.points -= pack.cost;
+        this.hud.updatePoints(this.points);
+        this.powerupManager.activate(pack, this.player, this.snakes);
+        this.hud.showPowerupNotification(pack.name);
+
+        // Update toolbar
+        this.hud.updatePowerupToolbar(this.points, this.powerupManager.activePowerups);
     }
 
     /**
@@ -402,12 +429,10 @@ class Game {
                             }
                         }
 
-                        // === Check for kill-based power pack milestones ===
-                        const powerPacks = this.powerupManager.checkKillMilestones(this.leveling.totalKills);
-                        powerPacks.forEach(powerPack => {
-                            this.powerupManager.activate(powerPack, this.player, this.snakes);
-                            this.hud.showPowerupNotification(powerPack.name);
-                        });
+                        // === NEW: Points system ===
+                        this.points++;
+                        this.hud.updatePoints(this.points);
+                        this.hud.updatePowerupToolbar(this.points, this.powerupManager.activePowerups);
                     }
                 }
             });

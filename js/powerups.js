@@ -44,7 +44,8 @@ const POWER_PACKS = {
         icon: '🔫',
         duration: 12,
         color: '#ff9900',
-        description: 'Faster fire rate + bullet speed'
+        description: 'Faster fire rate + bullet speed',
+        cost: 10
     },
     SHIELD_PROTECTION: {
         id: 'shield',
@@ -52,7 +53,8 @@ const POWER_PACKS = {
         icon: '🛡️',
         duration: 8,
         color: '#00d4ff',
-        description: 'Absorb snake damage'
+        description: 'Absorb snake damage',
+        cost: 10
     },
     FREEZE_SNAKES: {
         id: 'freezeSnakes',
@@ -60,31 +62,16 @@ const POWER_PACKS = {
         icon: '❄️',
         duration: 5,
         color: '#66ccff',
-        description: 'Freeze all snakes'
+        description: 'Freeze all snakes',
+        cost: 10
     }
 };
 
-// === NEW: Kill milestones - extensible structure ===
-// Format: { killCount: [array of power packs awarded] }
-const KILL_MILESTONES = {
-    10: [POWER_PACKS.FASTER_GUNS],
-    25: [POWER_PACKS.SHIELD_PROTECTION],
-    40: [POWER_PACKS.FREEZE_SNAKES],
-    60: [POWER_PACKS.FASTER_GUNS, POWER_PACKS.SHIELD_PROTECTION],
-    80: [POWER_PACKS.FREEZE_SNAKES],
-    100: [POWER_PACKS.FASTER_GUNS, POWER_PACKS.SHIELD_PROTECTION, POWER_PACKS.FREEZE_SNAKES]
-};
+// Kill milestones REMOVED in favor of points system
 
 // Level milestones for power-ups (original system)
 const POWERUP_MILESTONES = {
-    3: POWERUP_TYPES.RAPID_FIRE,
-    5: POWERUP_TYPES.SHIELD,
-    7: POWERUP_TYPES.WIDE_SHOT,
-    10: POWERUP_TYPES.NUKE,
-    13: POWERUP_TYPES.RAPID_FIRE,
-    15: POWERUP_TYPES.SHIELD,
-    17: POWERUP_TYPES.WIDE_SHOT,
-    20: POWERUP_TYPES.NUKE
+    // Legacy support or remove if desired. Keeping for now but focusing on points.
 };
 
 /**
@@ -95,7 +82,6 @@ class PowerupManager {
     constructor() {
         this.activePowerups = new Map(); // Map of powerup id -> remaining time
         this.hudCallback = null;
-        this.awardedMilestones = new Set(); // Track which kill milestones have been awarded
         this.frozenSnakes = [];  // Reference to snakes array for freeze effect
     }
 
@@ -117,23 +103,14 @@ class PowerupManager {
     }
 
     /**
-     * === NEW: Check for kill-based milestones ===
-     * @param {number} totalKills - Total snakes killed
-     * @returns {Array} Array of power packs to award
+     * Check if any power-up is currently active
+     * @returns {boolean} True if a power-up is active
      */
-    checkKillMilestones(totalKills) {
-        const awards = [];
-
-        for (const [killCount, powerPacks] of Object.entries(KILL_MILESTONES)) {
-            const milestone = parseInt(killCount);
-            if (totalKills >= milestone && !this.awardedMilestones.has(milestone)) {
-                this.awardedMilestones.add(milestone);
-                awards.push(...powerPacks);
-            }
-        }
-
-        return awards;
+    hasActivePowerup() {
+        return this.activePowerups.size > 0;
     }
+
+    /* checkKillMilestones removed */
 
     /**
      * Activate a power-up
@@ -283,7 +260,6 @@ class PowerupManager {
             }
         }
         this.activePowerups.clear();
-        this.awardedMilestones.clear();
         this.updateHud();
     }
 }
