@@ -176,42 +176,18 @@ class Player {
         let vx = 0;
         let vy = 0;
 
-        // === NEW: Touch-based movement (takes priority over keyboard) ===
-        if (this.touchActive) {
-            // Calculate direction and distance to touch point
-            const dx = this.touchX - this.x;
-            const dy = this.touchY - this.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
+        // === TOUCH MODE: Player stays fixed, only aims at touch ===
+        // Movement is keyboard-only (WASD/arrows)
+        if (this.keys.up) vy -= 1;
+        if (this.keys.down) vy += 1;
+        if (this.keys.left) vx -= 1;
+        if (this.keys.right) vx += 1;
 
-            // Only move if touch is beyond threshold distance
-            if (distance > this.touchMoveThreshold) {
-                // Normalize direction
-                vx = dx / distance;
-                vy = dy / distance;
-
-                // Clamp movement so player doesn't overshoot
-                const maxMove = this.speed * deltaTime;
-                if (distance < maxMove) {
-                    // Move exactly to touch point
-                    this.x = this.touchX;
-                    this.y = this.touchY;
-                    vx = 0;
-                    vy = 0;
-                }
-            }
-        } else {
-            // Keyboard movement (only when not touching)
-            if (this.keys.up) vy -= 1;
-            if (this.keys.down) vy += 1;
-            if (this.keys.left) vx -= 1;
-            if (this.keys.right) vx += 1;
-
-            // Normalize diagonal movement
-            if (vx !== 0 && vy !== 0) {
-                const factor = 1 / Math.sqrt(2);
-                vx *= factor;
-                vy *= factor;
-            }
+        // Normalize diagonal movement
+        if (vx !== 0 && vy !== 0) {
+            const factor = 1 / Math.sqrt(2);
+            vx *= factor;
+            vy *= factor;
         }
 
         // Apply movement
