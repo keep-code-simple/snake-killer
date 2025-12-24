@@ -9,25 +9,35 @@ class Bullet {
      * @param {number} x - Starting X position
      * @param {number} y - Starting Y position
      * @param {number} angle - Direction angle in radians
+     * @param {Object} weapon - Weapon configuration
      * @param {Object} modifiers - Power-up modifiers
      */
-    constructor(x, y, angle, modifiers = {}) {
+    constructor(x, y, angle, weapon, modifiers = {}) {
         this.x = x;
         this.y = y;
         this.angle = angle;
 
-        // Apply modifiers from power-ups
-        this.radius = (modifiers.wideShot ? 3 : 1) * GAME_CONSTANTS.BULLET_RADIUS;
-        // === NEW: fasterGuns increases bullet speed by 50% ===
-        this.speed = GAME_CONSTANTS.BULLET_SPEED * (modifiers.fasterGuns ? 1.5 : 1);
-        this.damage = GAME_CONSTANTS.BULLET_DAMAGE * (modifiers.wideShot ? 1.5 : 1);
+        // Apply weapon stats and modifiers
+        const speedMult = modifiers.fasterGuns ? 1.5 : 1;
+
+        // Use default if weapon not provided (fallback)
+        const w = weapon || {
+            bulletSize: 1,
+            bulletSpeed: GAME_CONSTANTS.BULLET_SPEED,
+            damage: GAME_CONSTANTS.BULLET_DAMAGE,
+            bulletColor: GAME_CONSTANTS.COLORS.BULLET
+        };
+
+        this.radius = Math.max(2, w.bulletSize * GAME_CONSTANTS.BULLET_RADIUS * (modifiers.wideShot ? 1.5 : 1));
+        this.speed = w.bulletSpeed * speedMult;
+        this.damage = w.damage * (modifiers.wideShot ? 1.5 : 1);
 
         // Calculate velocity components
         this.vx = Math.cos(angle) * this.speed;
         this.vy = Math.sin(angle) * this.speed;
 
         // Visual properties
-        this.color = GAME_CONSTANTS.COLORS.BULLET;
+        this.color = w.bulletColor || GAME_CONSTANTS.COLORS.BULLET;
         this.glowColor = GAME_CONSTANTS.COLORS.BULLET_GLOW;
         this.trail = []; // Store previous positions for trail effect
         this.maxTrailLength = 8;

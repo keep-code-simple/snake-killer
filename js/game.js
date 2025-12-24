@@ -17,6 +17,8 @@ class Game {
         this.hud = new HUD();
         this.leveling = new LevelingSystem();
         this.powerupManager = new PowerupManager();
+        // === NEW: Audio System ===
+        this.audio = new AudioManager();
 
         // Game entities
         this.player = null;
@@ -45,6 +47,7 @@ class Game {
         this.handleTouchMove = this.handleTouchMove.bind(this);
         this.handleTouchEnd = this.handleTouchEnd.bind(this);
         this.handlePowerupActivation = this.handlePowerupActivation.bind(this);
+        this.toggleSound = this.toggleSound.bind(this);
 
         // Setup callbacks
         this.setupCallbacks();
@@ -60,6 +63,8 @@ class Game {
         // Level up callback
         this.leveling.onLevelUp = (level) => {
             this.hud.showLevelUp();
+            this.audio.play('levelup');
+            this.updateBackground(level);
         };
 
         // XP change callback
@@ -74,6 +79,31 @@ class Game {
             // Update toolbar state (bottom center)
             this.hud.updatePowerupToolbar(this.points, this.powerupManager.activePowerups);
         });
+    }
+
+    /**
+     * Update background based on level
+     * @param {number} level 
+     */
+    updateBackground(level) {
+        const themes = ['bg-default', 'bg-space', 'bg-mars', 'bg-desert', 'bg-earth'];
+        const themeIndex = (level - 1) % themes.length;
+
+        themes.forEach(t => document.body.classList.remove(t));
+        document.body.classList.add(themes[themeIndex]);
+    }
+
+    /**
+     * Toggle sound state
+     */
+    toggleSound() {
+        if (!this.audio) return;
+        const enabled = this.audio.toggle();
+        const btn = document.getElementById('sound-toggle');
+        if (btn) {
+            btn.classList.toggle('muted', !enabled);
+            btn.textContent = enabled ? '🔊' : '🔇';
+        }
     }
 
     /**
@@ -107,6 +137,45 @@ class Game {
         // Menu buttons
         document.getElementById('start-btn').addEventListener('click', () => this.start());
         document.getElementById('restart-btn').addEventListener('click', () => this.restart());
+
+        // === NEW: Sound Toggle ===
+        const soundBtn = document.getElementById('sound-toggle');
+        if (soundBtn) {
+            // Init state visual
+            if (this.audio && !this.audio.enabled) {
+                soundBtn.classList.add('muted');
+                soundBtn.textContent = '🔇';
+            }
+            soundBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (this.audio) this.audio.init();
+                this.toggleSound();
+            });
+            // Also enable touch
+            soundBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (this.audio) this.audio.init();
+                this.toggleSound();
+            }, { passive: false });
+        }
+
+        // Audio Init on Interaction
+        const initAudio = () => { if (this.audio) this.audio.init(); };
+        window.addEventListener('click', initAudio, { once: true });
+        window.addEventListener('keydown', initAudio, { once: true });
+        window.addEventListener('touchstart', initAudio, { once: true });
+    }
+
+    /**
+     * Switch weapon by ID
+     * @param {string} id 
+     */
+    switchWeapon(id) {
+        if (!this.player) return;
+        this.player.setWeapon(id);
+        this.hud.updateWeaponToolbar(id);
     }
 
     /**
@@ -116,6 +185,12 @@ class Game {
     handleKeyDown(e) {
         if (this.player && this.running) {
             this.player.handleKeyInput(e.key, true);
+
+            // Weapon Hotkeys
+            if (e.key === '1') this.switchWeapon(WEAPONS.PISTOL.id);
+            if (e.key === '2') this.switchWeapon(WEAPONS.RAPID.id);
+            if (e.key === '3') this.switchWeapon(WEAPONS.SHOTGUN.id);
+            if (e.key === '4') this.switchWeapon(WEAPONS.TANK.id);
         }
 
         // Restart on space when game over
@@ -263,6 +338,14 @@ class Game {
         this.hud.updatePoints(this.points);
         this.hud.initializePowerupToolbar(POWER_PACKS, this.handlePowerupActivation);
 
+        // === NEW: Weapon Toolbar ===
+        this.hud.initializeWeaponToolbar(WEAPONS, (id) => {
+            if (this.player) {
+                this.switchWeapon(id);
+            }
+        });
+        this.hud.updateWeaponToolbar(this.player.currentWeapon.id);
+
         // Show HUD
         this.hud.show();
 
@@ -303,6 +386,7 @@ class Game {
         this.hud.updatePoints(this.points);
         this.powerupManager.activate(pack, this.player, this.snakes);
         this.hud.showPowerupNotification(pack.name);
+        this.audio.play('powerup');
 
         // Update toolbar
         this.hud.updatePowerupToolbar(this.points, this.powerupManager.activePowerups);
@@ -341,7 +425,12 @@ class Game {
         // Update player
         const newBullet = this.player.update(deltaTime, this.canvas.width, this.canvas.height);
         if (newBullet) {
-            this.bullets.push(newBullet);
+            if (Array.isArray(newBullet)) {
+                this.bullets.push(...newBullet);
+            } else {
+                this.bullets.push(newBullet);
+            }
+            this.audio.play('shoot');
         }
 
         // Update power-ups (pass snakes for freeze expiration)
@@ -418,6 +507,7 @@ class Game {
                     const killed = snake.takeDamage(bullet.damage);
 
                     if (killed) {
+                        this.audio.play('hit');
                         this.leveling.addXp(snake.xpValue);
 
                         // === NEW: Health Regen every 5 kills ===

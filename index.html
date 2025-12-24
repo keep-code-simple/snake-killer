@@ -54,6 +54,9 @@
 
         <!-- HUD -->
         <div id="hud" class="hidden">
+            <!-- Weapon Toolbar (Right Side) -->
+            <div id="weapon-toolbar" class="weapon-toolbar"></div>
+
             <!-- Health Bar -->
             <div class="hud-health">
                 <div class="health-bar-container">
@@ -77,6 +80,7 @@
             <div id="active-effects-container" class="hud-powerups"></div>
 
             <div class="hud-stats">
+                <button id="sound-toggle" class="sound-toggle">🔊</button>
                 <div class="stat">
                     <span class="stat-label">POINTS</span>
                     <span id="points-text" class="stat-value highlight">0</span>
@@ -118,6 +122,8 @@
 
     <!-- Game Scripts -->
     <script src="js/utils.js"></script>
+    <script src="js/audio.js"></script>
+    <script src="js/weapons.js"></script>
     <script src="js/bullet.js"></script>
     <script src="js/snake.js"></script>
     <script src="js/player.js"></script>

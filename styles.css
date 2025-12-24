@@ -49,7 +49,6 @@ body {
 
 body {
     font-family: 'Rajdhani', sans-serif;
-    background: var(--bg-darker);
     color: var(--text);
     overflow: hidden;
     min-height: 100vh;
@@ -57,6 +56,30 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+    transition: background 1.5s ease;
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+}
+
+/* Background Themes */
+.bg-default {
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+}
+
+.bg-space {
+    background: radial-gradient(circle at 50% 50%, #1a2980 0%, #26d0ce 100%);
+    /* Blue abstract */
+}
+
+.bg-earth {
+    background: linear-gradient(to bottom, #11998e, #38ef7d);
+}
+
+.bg-mars {
+    background: linear-gradient(to bottom, #cb2d3e, #ef473a);
+}
+
+.bg-desert {
+    background: linear-gradient(to bottom, #CAC531, #F3F9A7);
 }
 
 /* Game Container - with safe area padding */
@@ -689,10 +712,94 @@ body {
     pointer-events: none;
 }
 
+/* Sound Toggle */
+.sound-toggle {
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid #444;
+    color: #fff;
+    font-size: 1.2rem;
+    padding: 8px;
+    border-radius: 50%;
+    cursor: pointer;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(4px);
+}
+
+.sound-toggle:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: #666;
+    transform: scale(1.1);
+}
+
+.sound-toggle.muted {
+    opacity: 0.5;
+    filter: grayscale(100%);
+    text-decoration: line-through;
+}
+
+/* Weapon Toolbar */
+.weapon-toolbar {
+    position: absolute;
+    right: 20px;
+    bottom: 120px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    z-index: 100;
+}
+
+.weapon-btn {
+    background: rgba(0, 0, 0, 0.6);
+    border: 2px solid #444;
+    border-radius: 12px;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(5px);
+    position: relative;
+}
+
+.weapon-btn.active {
+    border-color: var(--accent);
+    background: rgba(0, 212, 255, 0.2);
+    box-shadow: 0 0 15px var(--accent-glow);
+    transform: scale(1.1);
+}
+
+.weapon-btn:hover {
+    transform: scale(1.05);
+    border-color: #888;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    .weapon-toolbar {
+        bottom: 100px;
+        right: 15px;
+        gap: 8px;
+    }
+
+    .weapon-btn {
+        width: 45px;
+        height: 45px;
+        font-size: 1.2rem;
+    }
+}
+
 /* ============================================
    RESPONSIVE ADJUSTMENTS & TOUCH SUPPORT
    ============================================ */
-
 @media (max-width: 768px) {
     .game-title {
         font-size: 2.5rem;

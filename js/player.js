@@ -21,7 +21,8 @@ class Player {
         this.health = this.maxHealth;
 
         // Shooting
-        this.shootCooldown = GAME_CONSTANTS.PLAYER_SHOOT_COOLDOWN;
+        this.currentWeapon = WEAPONS.PISTOL;
+        this.shootCooldown = this.currentWeapon.fireRate * 1000;
         this.lastShootTime = 0;
 
         // === NEW: Shooting animation state ===
@@ -225,7 +226,7 @@ class Player {
     canShoot() {
         const now = Date.now();
         // Faster guns power-up stacks with rapid fire
-        let cooldown = this.shootCooldown;
+        let cooldown = this.currentWeapon.fireRate * 1000;
         if (this.powerups.rapidFire) cooldown /= 2;
         if (this.powerups.fasterGuns) cooldown /= 1.5;
         return now - this.lastShootTime >= cooldown;
@@ -242,8 +243,7 @@ class Player {
         this.muzzleFlashTime = 0.08;  // 80ms muzzle flash
         this.recoilOffset = 5;         // Recoil pushback in pixels
 
-        // Calculate gun barrel position (where bullet spawns)
-        // Gun is offset from center and rotated with player
+        // Calculate gun barrel position
         const gunEndX = this.x + Math.cos(this.rotation) * (this.gunLength - this.recoilOffset);
         const gunEndY = this.y + Math.sin(this.rotation) * (this.gunLength - this.recoilOffset);
 
@@ -252,10 +252,35 @@ class Player {
         const spawnX = gunEndX + Math.cos(perpAngle) * this.gunOffsetY * 0.3;
         const spawnY = gunEndY + Math.sin(perpAngle) * this.gunOffsetY * 0.3;
 
-        return new Bullet(spawnX, spawnY, this.rotation, {
-            wideShot: this.powerups.wideShot,
-            fasterGuns: this.powerups.fasterGuns  // Pass to bullet for speed boost
-        });
+        // Multi-projectile support (Shotgun)
+        if (this.currentWeapon.count > 1) {
+            const bullets = [];
+            const totalSpread = this.currentWeapon.spread;
+            const startAngle = this.rotation - totalSpread / 2;
+            const step = totalSpread / (this.currentWeapon.count - 1);
+
+            for (let i = 0; i < this.currentWeapon.count; i++) {
+                const angle = startAngle + step * i;
+                bullets.push(new Bullet(spawnX, spawnY, angle, this.currentWeapon, this.powerups));
+            }
+            return bullets;
+        } else {
+            // Single shot with random spread
+            const spread = (Math.random() - 0.5) * (this.currentWeapon.spread || 0);
+            return new Bullet(spawnX, spawnY, this.rotation + spread, this.currentWeapon, this.powerups);
+        }
+    }
+
+    /**
+     * Set active weapon
+     * @param {string} weaponId 
+     */
+    setWeapon(weaponId) {
+        // Find weapon by ID
+        const weapon = Object.values(WEAPONS).find(w => w.id === weaponId);
+        if (weapon) {
+            this.currentWeapon = weapon;
+        }
     }
 
     /**

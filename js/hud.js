@@ -255,6 +255,53 @@ class HUD {
     }
 
     /**
+     * Initialize weapon toolbar
+     * @param {Object} weapons 
+     * @param {Function} callback 
+     */
+    initializeWeaponToolbar(weapons, callback) {
+        const container = document.getElementById('weapon-toolbar');
+        if (!container) return;
+        container.innerHTML = '';
+
+        Object.values(weapons).forEach(w => {
+            const btn = document.createElement('div');
+            btn.className = 'weapon-btn';
+            btn.id = `weapon-${w.id}`;
+            btn.title = w.name;
+            btn.innerHTML = w.icon;
+
+            const select = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                callback(w.id);
+            };
+            btn.addEventListener('click', select);
+            btn.addEventListener('touchstart', select, { passive: false });
+
+            container.appendChild(btn);
+        });
+    }
+
+    /**
+     * Update active weapon highlight
+     * @param {string} activeWeaponId 
+     */
+    updateWeaponToolbar(activeWeaponId) {
+        const container = document.getElementById('weapon-toolbar');
+        if (!container) return;
+        const buttons = container.querySelectorAll('.weapon-btn');
+        buttons.forEach(btn => {
+            const id = btn.id.replace('weapon-', '');
+            if (id === activeWeaponId) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+    }
+
+    /**
      * Reset HUD to initial state
      */
     reset() {
