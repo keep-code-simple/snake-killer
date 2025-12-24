@@ -152,6 +152,13 @@ class AudioManager {
             case 'switch':
                 this.switchSound();
                 break;
+            // === NEW: Ally sounds ===
+            case 'allySpawn':
+                this.allySpawnSound();
+                break;
+            case 'allyDespawn':
+                this.allyDespawnSound();
+                break;
         }
     }
 
@@ -263,5 +270,71 @@ class AudioManager {
 
         osc.start();
         osc.stop(this.ctx.currentTime + 0.08);
+    }
+
+    /**
+     * === NEW: Ally spawn sound - parachute whoosh + landing thud ===
+     */
+    allySpawnSound() {
+        // Whoosh sound (descending noise)
+        const osc1 = this.ctx.createOscillator();
+        const gain1 = this.ctx.createGain();
+
+        osc1.connect(gain1);
+        gain1.connect(this.ctx.destination);
+
+        osc1.type = 'sawtooth';
+        // Descending whoosh
+        osc1.frequency.setValueAtTime(800, this.ctx.currentTime);
+        osc1.frequency.exponentialRampToValueAtTime(200, this.ctx.currentTime + 0.4);
+
+        gain1.gain.setValueAtTime(this.masterVolume * 0.3, this.ctx.currentTime);
+        gain1.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.4);
+
+        osc1.start();
+        osc1.stop(this.ctx.currentTime + 0.4);
+
+        // Landing thud (delayed)
+        setTimeout(() => {
+            if (!this.ctx || this.ctx.state === 'closed') return;
+
+            const osc2 = this.ctx.createOscillator();
+            const gain2 = this.ctx.createGain();
+
+            osc2.connect(gain2);
+            gain2.connect(this.ctx.destination);
+
+            osc2.type = 'sine';
+            osc2.frequency.setValueAtTime(100, this.ctx.currentTime);
+            osc2.frequency.exponentialRampToValueAtTime(40, this.ctx.currentTime + 0.15);
+
+            gain2.gain.setValueAtTime(this.masterVolume * 0.5, this.ctx.currentTime);
+            gain2.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
+
+            osc2.start();
+            osc2.stop(this.ctx.currentTime + 0.15);
+        }, 350);
+    }
+
+    /**
+     * === NEW: Ally despawn sound - teleport/fade effect ===
+     */
+    allyDespawnSound() {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.type = 'sine';
+        // Ascending fade-out
+        osc.frequency.setValueAtTime(200, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1000, this.ctx.currentTime + 0.25);
+
+        gain.gain.setValueAtTime(this.masterVolume * 0.3, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.25);
+
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.25);
     }
 }

@@ -24,6 +24,7 @@ class Game {
         this.player = null;
         this.bullets = [];
         this.snakes = [];
+        this.ally = null;  // === NEW: NPC ally from Call for Help ===
 
         // Game state
         this.running = false;
@@ -374,6 +375,7 @@ class Game {
         // Reset systems
         this.bullets = [];
         this.snakes = [];
+        this.ally = null;  // === NEW: Reset ally ===
         this.leveling.reset();
         this.powerupManager.reset(this.player, this.snakes);
         this.hud.reset();
@@ -480,6 +482,46 @@ class Game {
 
         // Update power-ups (pass snakes for freeze expiration)
         this.powerupManager.update(deltaTime, this.player, this.snakes);
+
+        // === NEW: Handle ally spawning from Call for Help ===
+        if (this.powerupManager.pendingAllySpawn && !this.ally) {
+            this.ally = new Ally(
+                this.canvas.width,
+                this.canvas.height,
+                this.player.currentWeapon
+            );
+            this.powerupManager.pendingAllySpawn = false;
+            this.audio.play('allySpawn');
+        }
+
+        // === NEW: Update ally if active ===
+        if (this.ally) {
+            const allyBullets = this.ally.update(deltaTime, this.snakes);
+            if (allyBullets) {
+                if (Array.isArray(allyBullets)) {
+                    this.bullets.push(...allyBullets);
+                } else {
+                    this.bullets.push(allyBullets);
+                }
+                this.audio.play('shoot');
+            }
+
+            // Check if ally despawned
+            if (!this.ally.active) {
+                this.ally = null;
+                this.audio.play('allyDespawn');
+                // Remove callForHelp from active powerups
+                this.powerupManager.activePowerups.delete('callForHelp');
+                this.powerupManager.updateHud();
+                this.hud.updatePowerupToolbar(this.points, this.powerupManager.activePowerups);
+            } else {
+                // Update remaining time display based on ally lifespan
+                const callForHelpPowerup = this.powerupManager.activePowerups.get('callForHelp');
+                if (callForHelpPowerup) {
+                    callForHelpPowerup.remainingTime = this.ally.getRemainingTime();
+                }
+            }
+        }
 
         // Spawn snakes
         this.spawnSnakes(currentTime);
@@ -623,6 +665,12 @@ class Game {
         // Draw game entities
         this.bullets.forEach(bullet => bullet.render(ctx));
         this.snakes.forEach(snake => snake.render(ctx));
+
+        // === NEW: Render ally if active ===
+        if (this.ally) {
+            this.ally.render(ctx);
+        }
+
         this.player.render(ctx);
 
         // Draw vignette effect

@@ -64,6 +64,16 @@ const POWER_PACKS = {
         color: '#66ccff',
         description: 'Freeze all snakes',
         cost: 10
+    },
+    // === NEW: Call for Help power pack ===
+    CALL_FOR_HELP: {
+        id: 'callForHelp',
+        name: 'CALL FOR HELP',
+        icon: '🪂',
+        duration: 15,  // Total time including descent
+        color: '#ff8800',
+        description: 'Summon NPC ally with parachute',
+        cost: 10
     }
 };
 
@@ -117,15 +127,25 @@ class PowerupManager {
      * @param {Object} powerup - Power-up type object
      * @param {Player} player - Player to apply power-up to
      * @param {Array} snakes - Array of snakes (for nuke/freeze)
+     * @param {Object} gameContext - Optional game context for ally spawning
      * @returns {Object} Power-up data for notification
      */
-    activate(powerup, player, snakes = []) {
+    activate(powerup, player, snakes = [], gameContext = null) {
         if (powerup.id === 'nuke') {
             // Instant effect - damage all snakes
             this.triggerNuke(snakes);
         } else if (powerup.id === 'freezeSnakes') {
-            // === NEW: Freeze all snakes ===
+            // === Freeze all snakes ===
             this.triggerFreeze(snakes, powerup.duration);
+            this.activePowerups.set(powerup.id, {
+                ...powerup,
+                remainingTime: powerup.duration
+            });
+            this.updateHud();
+        } else if (powerup.id === 'callForHelp') {
+            // === NEW: Call for Help - spawn NPC ally ===
+            // Store pending ally spawn flag for game to handle
+            this.pendingAllySpawn = true;
             this.activePowerups.set(powerup.id, {
                 ...powerup,
                 remainingTime: powerup.duration
@@ -205,8 +225,12 @@ class PowerupManager {
             if (powerup.remainingTime <= 0) {
                 // Handle power-up expiration
                 if (id === 'freezeSnakes') {
-                    // === NEW: Unfreeze snakes when freeze expires ===
+                    // Unfreeze snakes when freeze expires
                     this.unfreezeAll(snakes);
+                } else if (id === 'callForHelp') {
+                    // === NEW: Call for Help manages its own cleanup ===
+                    // Ally despawn is handled by the Ally class itself
+                    // Just remove from active powerups
                 } else {
                     player.removePowerup(id);
                 }
